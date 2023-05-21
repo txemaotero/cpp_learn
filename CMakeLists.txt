@@ -6,7 +6,12 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Set the compiler to Clang
-set(CMAKE_CXX_COMPILER "clang++")
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++" CACHE FILEPATH "C++ compiler" FORCE)
 
 # Add the 'src' directory as a subdirectory
 add_subdirectory(src)
+
+add_subdirectory(tests)
+
+# Include Google Test
+add_subdirectory(gtest)

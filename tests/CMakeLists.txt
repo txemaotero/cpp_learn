@@ -9,3 +9,5 @@ target_include_directories(UnitTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../incl
 
 # Include the 'gtest' directory for Google Test headers
 target_include_directories(UnitTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../gtest/googletest/include)
+
+add_test(NAME UnitTests COMMAND UnitTests)

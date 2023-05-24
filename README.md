@@ -11,3 +11,14 @@ as template arguments.
 
 I will also use some additional tools to familiarize with the C++ ecosystem such
 as CMake to manage the project and the GTest framework to perform some tests.
+
+## TODOs
+
+- [ ] Copy the implementation from the book using the vector as container.
+  Achieve initialization and elemnt access.
+- [ ] Create the same structure but using std::array and full static memory
+  allocation.
+- [ ] Maybe create a constructor function that decide if the matrix can fit in
+  the stack.
+
+

@@ -1,77 +1,59 @@
 #pragma once
 
+#include "matrix_impl.hpp"
 #include "matrix_slice.hpp"
+#include "template_utils.hpp"
 #include <cstddef>
-#include <iostream>
-#include <vector>
 
-// Common base class for public Matrix and MatrixRef
-template <typename T, size_t N> class MatrixBase {
+namespace tensor {
+
+template <typename T, size_t... Ns>
+class TensorBase {
 public:
-  static constexpr size_t order_ = N;
-  using value_type = T;
+    static constexpr size_t size = template_utils::Product<Ns...>::value;
+    static constexpr size_t rank = sizeof...(Ns);
+    using value_type = T;
 
-  MatrixBase(MatrixBase &&) = default;
-  MatrixBase &operator=(MatrixBase &&) = default;
-  MatrixBase(const MatrixBase &) = default;
-  MatrixBase &operator=(const MatrixBase &) = default;
-  ~MatrixBase() = default;
+    TensorBase(TensorBase&&) = default;
+    TensorBase& operator=(TensorBase&&) = default;
+    TensorBase(const TensorBase&) = default;
+    TensorBase& operator=(const TensorBase&) = default;
+    ~TensorBase() = default;
 
-  //! specify the extents
-  template <typename... Exts>
-  explicit MatrixBase(Exts... exts) : desc_{exts...} {}
+    explicit TensorBase(const TensorSlice<Ns...>& ms)
+        : extents { ms }
+    {
+    }
 
-  explicit MatrixBase(const MatrixSlice<N> &ms) : desc_{ms} {}
+    size_t extent(size_t n) const { return extents.extents[n]; }
 
-  //! number of dimensions
-  static constexpr std::size_t order() { return order_; }
+    const TensorSlice<Ns...>& descriptor() const { return extents; }
 
-  //! #elements in the nth dimension
-  std::size_t extent(std::size_t n) const {
-    assert(n < order_);
-    return desc_.extents[n];
-  }
+    virtual T* data() = 0;
+    virtual const T* data() const = 0;
 
-  //! total number of elements
-  virtual std::size_t size() const = 0;
+    size_t n_rows() const { return extents.extents[0]; }
+    size_t n_cols() const { return extents.extents[1]; }
 
-  //! the slice defining subscripting
-  const MatrixSlice<N> &descriptor() const { return desc_; }
+    // m(i,j,k) subscripting with integers
+    template <typename... Args>
+    template_utils::Enable_if<template_utils::Requesting_element<Args...>(), T&>
+    operator()(Args... args)
+    {
+        assert(impl::check_bounds(this->desc_, args...));
+        return *(data() + this->desc_(args...));
+    }
 
-  //! "flat" element access
-  virtual T *data() = 0;
-  virtual const T *data() const = 0;
-
-  std::size_t n_rows() const { return desc_.extents[0]; }
-  std::size_t n_cols() const { return desc_.extents[1]; }
-
-  // m(i,j,k) subscripting with integers
-  template <typename... Args>
-  Enable_if<matrix_impl::Requesting_element<Args...>(), T &>
-  operator()(Args... args) {
-    assert(matrix_impl::check_bounds(this->desc_, args...));
-    return *(data() + this->desc_(args...));
-  }
-
-  template <typename... Args>
-  Enable_if<matrix_impl::Requesting_element<Args...>(), const T &>
-  operator()(Args... args) const {
-    assert(matrix_impl::check_bounds(this->desc_, args...));
-    return *(data() + this->desc_(args...));
-  }
+    template <typename... Args>
+    template_utils::Enable_if<template_utils::Requesting_element<Args...>(), const T&>
+    operator()(Args... args) const
+    {
+        assert(impl::check_bounds(this->desc_, args...));
+        return *(data() + this->desc_(args...));
+    }
 
 protected:
-  MatrixSlice<N> desc_; // slice defining extents in the N dimensions
+    TensorSlice<Ns...> extents {};
 };
 
-template <typename M>
-Enable_if<Matrix_type<M>(), std::ostream &> operator<<(std::ostream &os,
-                                                       const M &m) {
-  os << '{';
-  for (std::size_t i = 0; i != m.n_rows(); ++i) {
-    os << m[i];
-    if (i + 1 != m.n_rows())
-      os << ',';
-  }
-  return os << '}';
 }

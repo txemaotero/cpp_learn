@@ -3,8 +3,6 @@
 #include <cstddef>
 #include <ostream>
 
-namespace tensor {
-
 struct slice {
     slice()
         : start(-1)
@@ -39,6 +37,4 @@ std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& os,
     const slice& s)
 {
     return os << '(' << s.start << ' ' << s.length << ' ' << s.stride << ')';
-};
-
 }

@@ -1,59 +1,51 @@
 #pragma once
 
-#include "matrix_impl.hpp"
 #include "matrix_slice.hpp"
 #include "template_utils.hpp"
 #include <cstddef>
 
-namespace tensor {
+namespace matrix {
 
-template <typename T, size_t... Ns>
-class TensorBase {
+template <typename T, size_t Nrows, size_t Ncols>
+class MatrixBase {
 public:
-    static constexpr size_t size = template_utils::Product<Ns...>::value;
-    static constexpr size_t rank = sizeof...(Ns);
+    static constexpr size_t size = Nrows * Ncols;
+    static constexpr size_t nRows = Nrows;
+    static constexpr size_t nCols = Ncols;
     using value_type = T;
 
-    TensorBase(TensorBase&&) = default;
-    TensorBase& operator=(TensorBase&&) = default;
-    TensorBase(const TensorBase&) = default;
-    TensorBase& operator=(const TensorBase&) = default;
-    ~TensorBase() = default;
+    MatrixBase(MatrixBase&&) = default;
+    MatrixBase& operator=(MatrixBase&&) = default;
+    MatrixBase(const MatrixBase&) = default;
+    MatrixBase& operator=(const MatrixBase&) = default;
+    ~MatrixBase() = default;
 
-    explicit TensorBase(const TensorSlice<Ns...>& ms)
+    explicit MatrixBase(const MatrixSlice<Nrows, Ncols>& ms)
         : extents { ms }
     {
     }
 
-    size_t extent(size_t n) const { return extents.extents[n]; }
-
-    const TensorSlice<Ns...>& descriptor() const { return extents; }
-
     virtual T* data() = 0;
     virtual const T* data() const = 0;
 
-    size_t n_rows() const { return extents.extents[0]; }
-    size_t n_cols() const { return extents.extents[1]; }
+    constexpr size_t n_rows() const { return nRows; }
+    constexpr size_t n_cols() const { return nCols; }
 
     // m(i,j,k) subscripting with integers
-    template <typename... Args>
-    template_utils::Enable_if<template_utils::Requesting_element<Args...>(), T&>
-    operator()(Args... args)
+    T& operator()(size_t i, size_t j)
     {
-        assert(impl::check_bounds(this->desc_, args...));
-        return *(data() + this->desc_(args...));
+        assert(i < nRows && j < nCols);
+        return *(data() + extents(i, j));
     }
 
-    template <typename... Args>
-    template_utils::Enable_if<template_utils::Requesting_element<Args...>(), const T&>
-    operator()(Args... args) const
+    const T& operator()(size_t i, size_t j) const
     {
-        assert(impl::check_bounds(this->desc_, args...));
-        return *(data() + this->desc_(args...));
+        assert(i < nRows && j < nCols);
+        return *(data() + extents(i, j));
     }
 
 protected:
-    TensorSlice<Ns...> extents {};
+    MatrixSlice<Nrows, Ncols> extents {};
 };
 
 }

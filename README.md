@@ -26,9 +26,30 @@ vectors (row and column vectors) as a sub-instances of the matrix. For most of
 the use cases this will cover all my necessities and it is still a very good
 problem to learn new stuffs.
 
+
+## Matrix<T, Nrows, Ncols>
+
+The idea is know at compile time the dimensions of the matrix as well as the
+type of the elements. The elements are internally stored in a `std::array<T,
+Nrows*Ncols>`. All `Matrix` have a `MatrixSlice` member that is in charge of
+translating a (i_row, j_col) pair of integers to the correct index of the
+internal array. This may seem overkill for a simple matrix but it comes in handy
+when accessing slices of a `Matrix`.
+
+You can access to a slice of a `Matrix` by accessing its elements using the
+`slice`  struct. The `MatrixRef` is very similar to the `Matrix` one but it
+stores a pointer to the data in other `Matrix`. This means that the dimensions
+of a `MatrixRef<Nrows, Ncols>` will not generally match with the dimensions of
+the inner data pointer. However, the correct access is guaranteed due to the
+inner `MatrixSlice` member.
+
+You can always build a `Matrix` from a `MatrixRef` with different template
+dimension to create a reduced `Matrix` from the reference.
+
 ## TODOs
 
 - [X] Copy the implementation from the book using the vector as container.
   Achieve initialization and elemnt access.
 
 - [ ] Implement the base matrix template class (with only two indexes)
+

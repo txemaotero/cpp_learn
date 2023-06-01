@@ -20,7 +20,12 @@ public:
     MatrixBase& operator=(const MatrixBase&) = default;
     ~MatrixBase() = default;
 
-    explicit MatrixBase(const MatrixSlice<Nrows, Ncols>& ms)
+    MatrixBase()
+        : extents { { nRows, nCols } }
+    {
+    }
+
+    explicit MatrixBase(const MatrixSlice& ms)
         : extents { ms }
     {
     }
@@ -45,7 +50,7 @@ public:
     }
 
 protected:
-    MatrixSlice<Nrows, Ncols> extents {};
+    MatrixSlice extents;
 };
 
 }

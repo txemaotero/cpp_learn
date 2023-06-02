@@ -38,13 +38,10 @@ when accessing slices of a `Matrix`.
 
 You can access to a slice of a `Matrix` by accessing its elements using the
 `slice`  struct. The `MatrixRef` is very similar to the `Matrix` one but it
-stores a pointer to the data in other `Matrix`. This means that the dimensions
-of a `MatrixRef<Nrows, Ncols>` will not generally match with the dimensions of
-the inner data pointer. However, the correct access is guaranteed due to the
-inner `MatrixSlice` member.
-
-You can always build a `Matrix` from a `MatrixRef` with different template
-dimension to create a reduced `Matrix` from the reference.
+stores a pointer to the data in other `Matrix`. Note that the `MatrixRef` is not
+a template class as its dimensions can change dynamically. You can always build
+a `Matrix` from a `MatrixRef` but you have to know the dimensions of the target
+at compile time.
 
 ## TODOs
 

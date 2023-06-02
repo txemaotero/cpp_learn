@@ -1,5 +1,6 @@
 #pragma once
 
+#include "slice.hpp"
 #include "template_utils.hpp"
 #include <cassert>
 #include <cstddef>
@@ -16,60 +17,49 @@ public:
     MatrixSlice& operator=(const MatrixSlice&) = default;
     ~MatrixSlice() = default;
 
-    MatrixSlice(std::array<size_t, 2> _extents, size_t _start = 0)
-        : start { _start }
-        , target_extents { _extents }
-        , extents { _extents }
+    MatrixSlice(std::array<size_t, 2> _extents, slice _rows, slice _cols)
+        : extents { _extents }
+        , rowSlice { _rows }
+        , colSlice { _cols }
+        , start { _rows.start * _extents[1] + _cols.start }
     {
-
-        assert(_start < originSize());
-        computeStrides();
-    }
-
-    MatrixSlice(std::array<size_t, 2> _extents, std::array<size_t, 2> _target_extents, size_t _start = 0)
-        : start { _start }
-        , target_extents { _target_extents }
-        , extents { _extents }
-    {
-
-        assert(_start < originSize());
-        computeStrides();
-    }
-
-    MatrixSlice(std::array<size_t, 2> _strides, std::array<size_t, 2> _extents, std::array<size_t, 2> _target_extents, size_t _start = 0)
-        : start { _start }
-        , target_extents { _target_extents }
-        , extents { _extents }
-        , strides { _strides }
-    {
-        assert(_start < originSize());
-        assert(_strides[0] % _extents[1] == 0);
-        assert(_strides[0] / _extents[1] < _extents[0]);
-        assert(_strides[1] < _extents[1]);
+        assert(_rows.end <= _extents[0]);
+        assert(_cols.end <= _extents[1]);
+        strides[0] = _rows.stride * extents[1];
+        strides[1] = _cols.stride;
     }
 
     size_t operator()(size_t i, size_t j) const
     {
-        assert(i < target_extents[0] && j < target_extents[1]);
+        assert(i < rowSlice.size() && j < colSlice.size());
         return start + i * strides[0] + j * strides[1];
     }
 
-    size_t size() const { return target_extents[0] * target_extents[1]; }
+    size_t rows() const { return rowSlice.size(); }
+    size_t cols() const { return colSlice.size(); }
 
-    size_t rows() const { return extents[0]; }
-    size_t cols() const { return extents[1]; }
+    size_t size() const { return rows() * cols(); }
+
+    const slice& getRowSlice() const { return rowSlice; }
+    const slice& getColSlice() const { return colSlice; }
+
+    MatrixSlice operator()(slice rows, slice cols) const
+    {
+        assert(rows.end <= extents[0]);
+        assert(cols.end <= extents[1]);
+
+        slice newRows { rowSlice.start + rows.start, rowSlice.start + rows.size(), rowSlice.stride * rows.stride };
+        slice newCols { colSlice.start + cols.start, colSlice.start + cols.size(), colSlice.stride * cols.stride };
+
+        return { extents, newRows, newCols };
+    }
 
 private:
-    std::array<size_t, 2> strides; // How the index to the next element changes when we increment the index by 1
     std::array<size_t, 2> extents; // The rows and columns of the original Matrix
-    std::array<size_t, 2> target_extents; // The rows and columns target Matrix
+    std::array<size_t, 2> strides; // Strides to iterate over the original Matrix
     size_t start { 0 }; // Offset of the first element
-
-    void computeStrides()
-    {
-        strides[0] = extents[1];
-        strides[1] = 1;
-    }
+    slice rowSlice;
+    slice colSlice;
 
     size_t originSize() const { return extents[0] * extents[1]; }
 };

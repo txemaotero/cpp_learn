@@ -1,6 +1,5 @@
 
 
-#include "matrix_base.hpp"
 #include "matrix_impl.hpp"
 #include "matrix_ref.hpp"
 #include "matrix_slice.hpp"
@@ -10,13 +9,12 @@
 
 namespace matrix {
 
-template <typename T, size_t Nrows, size_t Ncols>
-class Matrix : public MatrixBase<T, Nrows, Ncols> {
+template <typename T, size_t Nrows, size_t Ncols> class Matrix {
 public:
-    using MatrixBase<T, Nrows, Ncols>::size;
+    static constexpr size_t size() { return Nrows * Ncols; }
+    using iterator = typename std::array<T, size()>::iterator;
 
-    using iterator = typename std::array<T, size>::iterator;
-
+    ////// Constructors
     Matrix() = default;
     Matrix(Matrix&&) = default; // move
     Matrix& operator=(Matrix&&) = default;
@@ -24,68 +22,75 @@ public:
     Matrix& operator=(const Matrix&) = default;
     ~Matrix() = default;
 
-    Matrix(impl::MatrixInitializer<T> list)
-    {
-        setFromInitList(list);
-    }
+    Matrix(impl::MatrixInitializer<T> list) { setFromInitList(list); }
+
     Matrix& operator=(impl::MatrixInitializer<T> list)
     {
         setFromInitList(list);
         return *this;
     };
 
-    template <size_t Nrows2, size_t Ncols2>
-    Matrix(MatrixRef<T, Nrows2, Ncols2> mr)
+    template <size_t Nrows2, size_t Ncols2> Matrix(MatrixRef<T> mr)
     {
         assert(Nrows == mr.rows() && Ncols == mr.cols());
         setFromMatrixRef(mr);
     }
 
-    template <size_t Nrows2, size_t Ncols2>
-    Matrix& operator=(MatrixRef<T, Nrows2, Ncols2> mr)
+    template <size_t Nrows2, size_t Ncols2> Matrix& operator=(MatrixRef<T> mr)
     {
         assert(Nrows == mr.rows() && Ncols == mr.cols());
         setFromMatrixRef(mr);
     }
 
-    T* data() override { return elems_.data(); }
-    const T* data() const override { return elems_.data(); }
+    ////// Accessors
+    constexpr size_t n_rows() const { return Nrows; }
+    constexpr size_t n_cols() const { return Ncols; }
 
-    using MatrixBase<T, Nrows, Ncols>::operator();
+    T* data() { return elems.data(); }
+    const T* data() const { return elems.data(); }
+
+    T& operator()(size_t i, size_t j)
+    {
+        assert(i < Nrows && j < Ncols);
+        return elems[i * Nrows + j];
+    }
+
+    const T& operator()(size_t i, size_t j) const
+    {
+        assert(i < Nrows && j < Ncols);
+        return elems[i * Nrows + j];
+    }
 
     // subscripting with slices
-    MatrixRef<T, Nrows, Ncols> operator()(slice rows, slice cols)
+    MatrixRef<T> operator()(slice rows, slice cols)
     {
         assert(rows.start < Nrows && rows.end <= Nrows && rows.start < rows.end);
         assert(cols.start < Ncols && cols.end <= Ncols && cols.start < cols.end);
 
-        std::array<size_t, 2> strides { Nrows * rows.stride, cols.stride };
-        MatrixSlice slice { strides, { Nrows, Ncols }, { rows.size(), cols.size() }, rows.start * Nrows + cols.start };
-        return { data(), slice };
+        MatrixSlice sl { { Nrows, Ncols }, rows, cols };
+        return { data(), sl };
     }
 
-    MatrixRef<T, Nrows, Ncols> operator()(size_t row, slice cols)
+    MatrixRef<T> operator()(size_t row, slice cols)
     {
         assert(row < Nrows);
         assert(cols.start < Ncols && cols.end <= Ncols && cols.start < cols.end);
 
-        std::array<size_t, 2> strides { Nrows, cols.stride };
-        MatrixSlice slice { strides, { Nrows, Ncols }, { 1, cols.size() }, row * Nrows + cols.start };
-        return { data(), slice };
+        MatrixSlice sl { { Nrows, Ncols }, slice(row, row + 1), cols };
+        return { data(), sl };
     }
 
-    MatrixRef<T, Nrows, Ncols> operator()(slice rows, size_t col)
+    MatrixRef<T> operator()(slice rows, size_t col)
     {
         assert(rows.start < Nrows && rows.end <= Nrows && rows.start < rows.end);
         assert(col < Ncols);
 
-        std::array<size_t, 2> strides { Nrows * rows.stride, 1 };
-        MatrixSlice slice { strides, { Nrows, Ncols }, { rows.size(), 1 }, rows.start * Nrows + col };
-        return { data(), slice };
+        MatrixSlice sl { { Nrows, Ncols }, rows, slice(col, col + 1) };
+        return { data(), sl };
     }
 
 private:
-    std::array<T, size> elems_;
+    std::array<T, size()> elems;
 
     void setFromInitList(impl::MatrixInitializer<T> list)
     {
@@ -94,18 +99,17 @@ private:
         for (const auto& row : list) {
             static_assert(row.size() == Ncols, "wrong number of columns");
             for (const auto& elem : row) {
-                elems_[i++] = elem;
+                elems[i++] = elem;
             }
         }
     }
 
-    template <size_t Nrows2, size_t Ncols2>
-    void setFromMatrixRef(MatrixRef<T, Nrows2, Ncols2> mr)
+    template <size_t Nrows2, size_t Ncols2> void setFromMatrixRef(MatrixRef<T> mr)
     {
         size_t i = 0;
         for (size_t r = 0; r < mr.rows(); ++r) {
             for (size_t c = 0; c < mr.cols(); ++c) {
-                elems_[i++] = mr(r, c);
+                elems[i++] = mr(r, c);
             }
         }
     }

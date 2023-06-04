@@ -18,12 +18,13 @@ struct slice {
         assert(start < end);
     }
 
-    size_t size() const {
+    size_t size() const
+    {
         size_t d = (end - start);
         size_t s = d / stride;
         if (s * stride < d)
             ++s;
-        return s; 
+        return s;
     }
 };
 

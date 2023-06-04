@@ -155,8 +155,7 @@ public:
     }
 
     template <typename M>
-    template_utils::Enable_if<template_utils::Has_matrix_type<M>(), Matrix<T, Nrows, Ncols>&>
-    operator+=(const M& m)
+    template_utils::Enable_if<template_utils::Has_matrix_type<M>(), Matrix<T, Nrows, Ncols>&> operator+=(const M& m)
     {
         using T2 = typename M::value_type;
         return apply(m, [](T& a, const T2& b) { a += b; });
@@ -170,8 +169,7 @@ public:
     }
 
     template <typename M>
-    template_utils::Enable_if<template_utils::Has_matrix_type<M>(), Matrix<T, Nrows, Ncols>&>
-    operator-=(const M& m)
+    template_utils::Enable_if<template_utils::Has_matrix_type<M>(), Matrix<T, Nrows, Ncols>&> operator-=(const M& m)
     {
         using T2 = typename M::value_type;
         return apply(m, [](T& a, const T2& b) { a -= b; });
@@ -185,8 +183,7 @@ public:
     }
 
     template <typename M>
-    template_utils::Enable_if<template_utils::Has_matrix_type<M>(), Matrix<T, Nrows, Ncols>&>
-    operator*=(const M& m)
+    template_utils::Enable_if<template_utils::Has_matrix_type<M>(), Matrix<T, Nrows, Ncols>&> operator*=(const M& m)
     {
         using T2 = typename M::value_type;
         return apply(m, [](T& a, const T2& b) { a *= b; });
@@ -200,8 +197,7 @@ public:
     }
 
     template <typename M>
-    template_utils::Enable_if<template_utils::Has_matrix_type<M>(), Matrix<T, Nrows, Ncols>&>
-    operator/=(const M& m)
+    template_utils::Enable_if<template_utils::Has_matrix_type<M>(), Matrix<T, Nrows, Ncols>&> operator/=(const M& m)
     {
         using T2 = typename M::value_type;
         return apply(m, [](T& a, const T2& b) { a /= b; });
@@ -213,7 +209,6 @@ public:
     {
         return apply([&scalar](T& a) { a /= scalar; });
     }
-
 
 private:
     std::array<T, size()> elems;

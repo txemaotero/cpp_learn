@@ -1,6 +1,5 @@
 
 
-
 #include "matrix_fwd.hpp"
 #include "matrix_impl.hpp"
 #include "matrix_slice.hpp"
@@ -79,8 +78,7 @@ public:
     }
 
     template <typename F, typename T2>
-    template_utils::Enable_if<template_utils::Convertible<T2, T>(), MatrixRef<T>&>
-    apply(const MatrixRef<T2>& mr, F f)
+    template_utils::Enable_if<template_utils::Convertible<T2, T>(), MatrixRef<T>&> apply(const MatrixRef<T2>& mr, F f)
     {
         size_t nrows = n_rows();
         size_t ncols = n_cols();
@@ -109,8 +107,7 @@ public:
         return true;
     }
 
-    template<size_t Nrows, size_t Ncols>
-    bool operator==(const Matrix<T, Nrows, Ncols>& rhs) const
+    template <size_t Nrows, size_t Ncols> bool operator==(const Matrix<T, Nrows, Ncols>& rhs) const
     {
         return rhs == *this;
     }

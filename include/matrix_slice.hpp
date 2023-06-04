@@ -48,8 +48,10 @@ public:
         assert(rows.end <= extents[0]);
         assert(cols.end <= extents[1]);
 
-        slice newRows { rowSlice.start + rows.start, rowSlice.start + rows.size(), rowSlice.stride * rows.stride };
-        slice newCols { colSlice.start + cols.start, colSlice.start + cols.size(), colSlice.stride * cols.stride };
+        auto new_rowStride = rowSlice.stride * rows.stride;
+        slice newRows { rowSlice.start + rows.start, rowSlice.start + rows.size() * new_rowStride, new_rowStride };
+        auto new_colStride = colSlice.stride * cols.stride;
+        slice newCols { colSlice.start + cols.start, colSlice.start + cols.size() * new_colStride, new_colStride };
 
         return { extents, newRows, newCols };
     }
